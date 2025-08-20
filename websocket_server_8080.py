@@ -192,7 +192,7 @@ class WebSocketServer:
                 "message": f"Stats error: {str(e)}"
             }))
     
-    async def handle_client(self, websocket, path):
+    async def handle_client(self, websocket):
         """Handle individual client connection"""
         await self.register_client(websocket)
         try:
@@ -209,8 +209,11 @@ class WebSocketServer:
         """Start WebSocket server"""
         print(f"Starting WebSocket server on port {self.port}")
         
+        async def handler(websocket, path):
+            await self.handle_client(websocket)
+        
         server = await websockets.serve(
-            self.handle_client,
+            handler,
             config.HOST,
             self.port
         )
