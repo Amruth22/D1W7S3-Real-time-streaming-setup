@@ -154,7 +154,12 @@ class DebugServer:
         print(f"Starting debug server on port {self.port}")
         
         async def handler(websocket, path):
-            await self.handle_client(websocket)
+            try:
+                await self.handle_client(websocket)
+            except Exception as e:
+                print(f"Handler error: {e}")
+                import traceback
+                traceback.print_exc()
         
         try:
             server = await websockets.serve(
