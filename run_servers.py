@@ -21,11 +21,22 @@ def check_requirements():
         import google.genai
         import fitz  # PyMuPDF
         print("All required packages are installed")
+        
+        # Download sentence-transformers model if needed
+        print("Checking sentence-transformers model...")
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer(config.EMBEDDING_MODEL)
+        print(f"Model {config.EMBEDDING_MODEL} ready")
+        
         return True
     except ImportError as e:
         print(f"Missing package: {e}")
         print("Run: pip install -r requirements.txt")
         return False
+    except Exception as e:
+        print(f"Model download error: {e}")
+        print("This may take a few minutes on first run...")
+        return True  # Continue anyway
 
 def create_directories():
     """Create necessary directories"""
