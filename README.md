@@ -1,18 +1,17 @@
-# Live Document Q&A System
+# Live Document Q&A System - Backend
 
-A real-time document processing and question-answering system with WebSocket load balancing, local vector search, and AI-powered responses.
+A high-performance document processing and question-answering backend system with WebSocket APIs, local vector search, and AI-powered responses.
 
 ## Architecture
 
-**Dual WebSocket Server Setup with Load Balancing:**
+**Dual WebSocket Server Backend:**
 - **Primary Server** (Port 8080): Main WebSocket server
-- **Secondary Server** (Port 8081): Backup WebSocket server  
-- **Client-side Load Balancing**: Automatic server selection and failover
-- **Local Vector Search**: sentence-transformers + FAISS
-- **AI Integration**: Gemini 2.0 Flash for intelligent responses
+- **Secondary Server** (Port 8081): Backup WebSocket server with load balancing
+- **Local Vector Search**: sentence-transformers + FAISS for fast semantic search
+- **AI Integration**: Google Gemini 2.0 Flash for intelligent responses
 
 ```
-Client (Load Balancer) 
+WebSocket Client
     ↓ 
 WebSocket Server 8080 ←→ FAISS + sentence-transformers ←→ Gemini API
 WebSocket Server 8081 ←→ FAISS + sentence-transformers ←→ Gemini API
@@ -22,82 +21,64 @@ PyMuPDF (PDF processing)
 
 ## Features
 
-### Real-time Streaming
+### Real-time Streaming Backend
 - **File Upload Progress**: Live progress updates during file upload
 - **Document Processing**: Real-time status during PDF text extraction
-- **Embedding Creation**: Progress updates during vector embedding generation
-- **Search Results**: Instant search results as user types
+- **Embedding Creation**: Progress updates during vector embedding generation  
+- **Search Results**: Fast semantic search with relevance scoring
 - **AI Responses**: Streaming AI responses from Gemini 2.0 Flash
 
-### Local Vector Search
+### Local Vector Search Engine
 - **sentence-transformers**: Local embedding generation (all-MiniLM-L6-v2)
 - **FAISS Integration**: Fast similarity search and indexing
-- **Document Chunking**: Intelligent text splitting for better search
-- **Real-time Search**: Search as you type functionality
+- **Document Chunking**: Intelligent text splitting for optimal search
+- **Persistent Storage**: Automatic index saving and loading
 
 ### WebSocket Load Balancing
 - **Dual Server Setup**: Primary (8080) and Secondary (8081) servers
-- **Client-side Balancing**: Automatic server selection
-- **Failover Mechanism**: Seamless switching if server is down
-- **Connection Management**: Automatic reconnection with backoff
+- **Automatic Failover**: Server redundancy for high availability
+- **Connection Management**: Proper WebSocket connection handling
 
-### Document Processing
-- **PyMuPDF**: Fast PDF text extraction
+### Document Processing Engine
+- **PyMuPDF**: Fast PDF text extraction with progress tracking
 - **Text Files**: Support for .txt files
-- **Progress Streaming**: Real-time processing updates
-- **Chunking**: Intelligent text segmentation
+- **Progress Streaming**: Real-time processing status updates
+- **Chunking**: Intelligent text segmentation with configurable overlap
 
 ## Quick Start
 
-1. **Install dependencies:**
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Configure API key:**
-   - Edit `config.py`
-   - Add your Gemini API key
-   - Get key from: https://makersuite.google.com/app/apikey
+### 2. Configure API Key
+Edit `config.py` and add your Gemini API key:
+```python
+GEMINI_API_KEY = "your-api-key-here"
+```
+Get your API key from: https://makersuite.google.com/app/apikey
 
-3. **Start both servers:**
+### 3. Start Backend Servers
 ```bash
+# Start both servers (recommended)
 python run_servers.py
+
+# OR start individually
+python websocket_server_8080.py  # Terminal 1
+python websocket_server_8081.py  # Terminal 2
 ```
 
-4. **Open client interface:**
-   - Open `client.html` in your web browser
-   - The client will automatically connect to available servers
-
-## Manual Server Setup
-
-**Start Primary Server (Terminal 1):**
+### 4. Test the Backend
 ```bash
-python websocket_server_8080.py
+python unit_test.py
 ```
 
-**Start Secondary Server (Terminal 2):**
-```bash
-python websocket_server_8081.py
-```
+## WebSocket API Endpoints
 
-## Usage Flow
-
-1. **Upload Documents:**
-   - Drag and drop PDF or text files
-   - Watch real-time processing progress
-   - Documents are automatically indexed
-
-2. **Search Documents:**
-   - Type in search box for instant results
-   - See relevance scores and source files
-   - Results update as you type
-
-3. **Ask Questions:**
-   - Enter questions about your documents
-   - AI searches relevant content first
-   - Get streaming responses with context
-
-## WebSocket Message Types
+### Server Endpoints
+- **Primary**: `ws://localhost:8080`
+- **Secondary**: `ws://localhost:8081`
 
 ### Client to Server Messages
 
@@ -126,7 +107,7 @@ python websocket_server_8081.py
 }
 ```
 
-**Get Stats:**
+**Get Statistics:**
 ```json
 {
   "type": "get_stats"
@@ -181,74 +162,121 @@ python websocket_server_8081.py
 }
 ```
 
+**AI Response Complete:**
+```json
+{
+  "type": "ai_complete",
+  "response": "Complete response text",
+  "question": "What is supervised learning?",
+  "context_used": true
+}
+```
+
 ## Configuration
 
 Edit `config.py` to customize:
 
 ```python
-# Gemini API
+# Gemini API Configuration
 GEMINI_API_KEY = "your-api-key-here"
 GEMINI_MODEL = "gemini-2.0-flash"
 
-# WebSocket Servers
+# WebSocket Server Configuration
 PRIMARY_PORT = 8080
 SECONDARY_PORT = 8081
+HOST = "localhost"
 
-# Vector Search
+# Vector Search Configuration
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+FAISS_INDEX_PATH = "data/faiss_index"
 EMBEDDING_DIMENSION = 384
 MAX_SEARCH_RESULTS = 5
 SIMILARITY_THRESHOLD = 0.6
 
-# Document Processing
+# Document Processing Configuration
+UPLOAD_DIR = "data/uploads"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+ALLOWED_EXTENSIONS = ['.pdf', '.txt']
 ```
 
 ## Testing
 
-Run comprehensive unit tests:
+Run comprehensive integration tests:
 ```bash
 python unit_test.py
 ```
 
-**Tests cover:**
-- **Text Chunking**: Document segmentation functionality
-- **File Saving**: Upload and storage mechanisms
-- **Vector Store**: FAISS initialization and operations
-- **Gemini Client**: AI integration setup
-- **WebSocket Messages**: Message format validation
+**Test Coverage (10 Tests):**
+- ✅ Server connections (both ports)
+- ✅ Statistics requests  
+- ✅ File upload and processing
+- ✅ Document indexing and embedding
+- ✅ Vector search functionality
+- ✅ AI question answering
+- ✅ Real-time streaming responses
+- ✅ Error handling
+- ✅ Load balancing
+- ✅ WebSocket message validation
 
 ## Project Structure
 
 ```
+D1W7S3-Real-time-streaming-setup/
+├── config.py                    # Configuration settings
+├── requirements.txt             # Python dependencies
+├── run_servers.py              # Server startup script
+├── unit_test.py                # Comprehensive tests (10 tests)
 ├── websocket_server_8080.py    # Primary WebSocket server
 ├── websocket_server_8081.py    # Secondary WebSocket server
 ├── document_processor.py       # PyMuPDF document processing
 ├── vector_search.py           # sentence-transformers + FAISS
 ├── gemini_client.py           # Gemini 2.0 Flash integration
-├── client.html                # Web client interface
-├── client.js                  # Client-side load balancing
-├── config.py                  # Configuration settings
-├── unit_test.py              # Unit tests (5 core tests)
-├── run_servers.py            # Server startup script
-├── requirements.txt          # Dependencies
-└── data/
-    ├── uploads/              # Uploaded files
-    ├── faiss_index/         # Vector index storage
-    └── sample_document.txt  # Sample document
+├── data/
+│   ├── uploads/                # Uploaded files storage
+│   ├── faiss_index/           # Vector index storage
+│   │   ├── faiss.index        # FAISS vector index
+│   │   └── documents.json     # Document metadata
+│   └── sample_document.txt    # Sample document
+└── README.md                   # This file
 ```
 
-## Load Balancing Logic
+## Performance & Scalability
 
-The client implements intelligent load balancing:
+### Current Performance
+- **Local Vector Search**: Sub-second response times
+- **Document Processing**: Real-time progress streaming
+- **Concurrent Connections**: Multiple WebSocket clients supported
+- **Memory Usage**: Optimized FAISS indexing
+- **File Processing**: 50MB max file size, PDF + TXT support
 
-1. **Server Priority**: Attempts primary server (8080) first
-2. **Automatic Failover**: Switches to secondary (8081) if primary fails
-3. **Health Monitoring**: Continuously monitors connection status
-4. **Reconnection**: Automatic reconnection with exponential backoff
-5. **Round Robin**: Alternates between servers for load distribution
+### Load Balancing Features
+- **Dual Server Setup**: Primary/secondary server redundancy
+- **Automatic Failover**: Client-side connection management
+- **Health Monitoring**: Server status tracking
+- **Persistent Storage**: Shared FAISS index between servers
+
+## Dependencies
+
+**Core Backend:**
+- `websockets>=11.0.0` - WebSocket server implementation
+- `sentence-transformers>=2.0.0` - Local embedding generation
+- `faiss-cpu>=1.7.0` - Fast similarity search
+- `google-genai>=0.3.0` - Gemini API integration
+- `PyMuPDF>=1.20.0` - PDF text extraction
+- `numpy>=1.21.0` - Numerical computations
+
+**Testing:**
+- `pytest>=7.0.0` - Testing framework
+
+## System Requirements
+
+- **Python**: 3.8+
+- **Memory**: 4GB+ RAM (for sentence-transformers model)
+- **Storage**: 2GB+ for models and indices
+- **Network**: Internet connection (for Gemini API)
+- **OS**: Windows, macOS, Linux
 
 ## Troubleshooting
 
@@ -256,59 +284,92 @@ The client implements intelligent load balancing:
 
 **Servers won't start:**
 - Check if ports 8080/8081 are available
-- Verify all dependencies are installed
+- Verify all dependencies are installed: `pip install -r requirements.txt`
 - Ensure config.py has valid Gemini API key
 
-**Client connection fails:**
+**Connection failures:**
 - Make sure at least one server is running
-- Check browser console for WebSocket errors
-- Try refreshing the page
+- Check firewall settings for ports 8080/8081
+- Verify WebSocket client implementation
 
 **File upload fails:**
 - Check file size (max 50MB)
 - Verify file type (.pdf or .txt only)
-- Ensure sufficient disk space
+- Ensure sufficient disk space in data/uploads/
 
 **Search returns no results:**
-- Upload documents first
-- Wait for processing to complete
-- Try different search terms
+- Upload and process documents first
+- Wait for embedding completion
+- Check similarity threshold in config.py
 
 **AI responses fail:**
-- Verify Gemini API key is valid
+- Verify Gemini API key is valid and has quota
 - Check internet connection
-- Monitor API quotas and limits
+- Monitor API rate limits
 
-### Performance Tips
+### Performance Optimization
 
-- Upload documents in smaller batches
-- Use descriptive filenames
-- Keep document chunks reasonably sized
-- Monitor system resources during processing
+- **Memory**: Monitor RAM usage during large file processing
+- **Storage**: Regularly clean up data/uploads/ directory
+- **Network**: Ensure stable internet for Gemini API calls
+- **Concurrent Users**: Scale by running multiple server instances
 
-## Dependencies
+## API Integration Examples
 
-- **websockets**: WebSocket server implementation
-- **sentence-transformers**: Local embedding generation
-- **faiss-cpu**: Fast similarity search
-- **google-genai**: Gemini API integration
-- **PyMuPDF**: PDF text extraction
-- **numpy**: Numerical computations
+### Python WebSocket Client
+```python
+import asyncio
+import websockets
+import json
+import base64
 
-## System Requirements
+async def connect_to_backend():
+    uri = "ws://localhost:8080"
+    async with websockets.connect(uri) as websocket:
+        # Upload file
+        with open("document.pdf", "rb") as f:
+            file_data = base64.b64encode(f.read()).decode()
+        
+        await websocket.send(json.dumps({
+            "type": "file_upload",
+            "filename": "document.pdf",
+            "file_data": file_data
+        }))
+        
+        # Handle responses
+        async for message in websocket:
+            data = json.loads(message)
+            print(f"Received: {data['type']}")
 
-- Python 3.8+
-- 4GB+ RAM (for sentence-transformers)
-- Modern web browser with WebSocket support
-- Internet connection (for Gemini API)
+asyncio.run(connect_to_backend())
+```
 
-## Real-time Features Summary
+### Search and Q&A Example
+```python
+# Search documents
+await websocket.send(json.dumps({
+    "type": "search_query",
+    "query": "machine learning algorithms"
+}))
 
-- File upload progress streaming
-- Document processing status updates
-- Real-time vector embedding creation
-- Instant search as you type
-- Live AI response streaming
-- Automatic server failover
-- Connection status monitoring
-- System statistics updates
+# Ask AI question
+await websocket.send(json.dumps({
+    "type": "ask_question", 
+    "question": "Explain supervised learning"
+}))
+```
+
+## Production Deployment
+
+For production use:
+1. **Environment Variables**: Move API keys to environment variables
+2. **HTTPS/WSS**: Use secure WebSocket connections
+3. **Load Balancer**: Deploy behind a proper load balancer
+4. **Monitoring**: Add logging and health check endpoints
+5. **Authentication**: Implement user authentication
+6. **Rate Limiting**: Add rate limiting for API calls
+7. **Database**: Consider external database for document metadata
+
+## License
+
+This project is a backend system for document processing and Q&A functionality.

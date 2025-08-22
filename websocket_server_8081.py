@@ -209,17 +209,12 @@ class WebSocketServer:
         """Start WebSocket server"""
         print(f"Starting WebSocket server on port {self.port}")
         
-        async def handler(websocket, path):
+        async def handler(websocket):
             await self.handle_client(websocket)
         
-        server = await websockets.serve(
-            handler,
-            config.HOST,
-            self.port
-        )
-        
-        print(f"WebSocket server running on ws://{config.HOST}:{self.port}")
-        await server.wait_closed()
+        async with websockets.serve(handler, config.HOST, self.port):
+            print(f"WebSocket server running on ws://{config.HOST}:{self.port}")
+            await asyncio.Future()  # Run forever
 
 async def main():
     """Main function to start secondary server"""
