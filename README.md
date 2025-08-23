@@ -53,11 +53,18 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure API Key
-Edit `config.py` and add your Gemini API key:
-```python
-GEMINI_API_KEY = "your-api-key-here"
+```bash
+# Copy the environment template
+cp .env.example .env
+
+# Edit .env file and add your Gemini API key
+# Get key from: https://makersuite.google.com/app/apikey
 ```
-Get your API key from: https://makersuite.google.com/app/apikey
+
+**In .env file:**
+```bash
+GEMINI_API_KEY=your-actual-api-key-here
+```
 
 ### 3. Start Backend Servers
 ```bash
@@ -174,32 +181,32 @@ python unit_test.py
 
 ## Configuration
 
-Edit `config.py` to customize:
+### Environment Variables (.env file)
+Copy `.env.example` to `.env` and customize:
+```bash
+# Required: Gemini API key
+GEMINI_API_KEY=your-actual-api-key-here
 
-```python
-# Gemini API Configuration
-GEMINI_API_KEY = "your-api-key-here"
-GEMINI_MODEL = "gemini-2.0-flash"
-
-# WebSocket Server Configuration
-PRIMARY_PORT = 8080
-SECONDARY_PORT = 8081
-HOST = "localhost"
-
-# Vector Search Configuration
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-FAISS_INDEX_PATH = "data/faiss_index"
-EMBEDDING_DIMENSION = 384
-MAX_SEARCH_RESULTS = 5
-SIMILARITY_THRESHOLD = 0.6
-
-# Document Processing Configuration
-UPLOAD_DIR = "data/uploads"
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
-ALLOWED_EXTENSIONS = ['.pdf', '.txt']
+# Optional: Override defaults
+GEMINI_MODEL=gemini-2.0-flash
+PRIMARY_PORT=8080
+SECONDARY_PORT=8081
+HOST=localhost
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+EMBEDDING_DIMENSION=384
+MAX_SEARCH_RESULTS=5
+SIMILARITY_THRESHOLD=0.6
+UPLOAD_DIR=data/uploads
+CHUNK_SIZE=500
+CHUNK_OVERLAP=50
+MAX_FILE_SIZE=52428800
 ```
+
+### Setup Steps
+1. **Copy template**: `cp .env.example .env`
+2. **Get API key**: Visit https://makersuite.google.com/app/apikey
+3. **Edit .env**: Add your actual Gemini API key
+4. **Start servers**: `python run_servers.py`
 
 ## Testing
 
@@ -285,7 +292,8 @@ D1W7S3-Real-time-streaming-setup/
 **Servers won't start:**
 - Check if ports 8080/8081 are available
 - Verify all dependencies are installed: `pip install -r requirements.txt`
-- Ensure config.py has valid Gemini API key
+- Ensure `.env` file exists with valid Gemini API key
+- Check `.env` file format: `GEMINI_API_KEY=your-key-here`
 
 **Connection failures:**
 - Make sure at least one server is running
@@ -303,9 +311,11 @@ D1W7S3-Real-time-streaming-setup/
 - Check similarity threshold in config.py
 
 **AI responses fail:**
-- Verify Gemini API key is valid and has quota
+- Check `.env` file contains valid Gemini API key
+- Verify API key is active: https://makersuite.google.com/app/apikey
 - Check internet connection
 - Monitor API rate limits
+- Ensure `python-dotenv` is installed: `pip install python-dotenv`
 
 ### Performance Optimization
 
@@ -362,13 +372,15 @@ await websocket.send(json.dumps({
 ## Production Deployment
 
 For production use:
-1. **Environment Variables**: Move API keys to environment variables
+1. **Environment Variables**: ✅ Already implemented with .env file
 2. **HTTPS/WSS**: Use secure WebSocket connections
 3. **Load Balancer**: Deploy behind a proper load balancer
 4. **Monitoring**: Add logging and health check endpoints
 5. **Authentication**: Implement user authentication
 6. **Rate Limiting**: Add rate limiting for API calls
 7. **Database**: Consider external database for document metadata
+8. **Secret Management**: Use proper secret management (AWS Secrets, etc.)
+9. **Container Deployment**: Docker/Kubernetes deployment
 
 ## License
 
