@@ -69,7 +69,7 @@ GEMINI_API_KEY=your-actual-api-key-here
 ### 3. Start Backend Servers
 ```bash
 # Start both servers (recommended)
-python run_servers.py
+python main.py
 
 # OR start individually
 python websocket_server_8080.py  # Terminal 1
@@ -206,7 +206,7 @@ MAX_FILE_SIZE=52428800
 1. **Copy template**: `cp .env.example .env`
 2. **Get API key**: Visit https://makersuite.google.com/app/apikey
 3. **Edit .env**: Add your actual Gemini API key
-4. **Start servers**: `python run_servers.py`
+4. **Start servers**: `python main.py`
 
 ## Testing
 
@@ -233,7 +233,7 @@ python unit_test.py
 D1W7S3-Real-time-streaming-setup/
 ├── config.py                    # Configuration settings
 ├── requirements.txt             # Python dependencies
-├── run_servers.py              # Server startup script
+├── main.py              # Server startup script
 ├── unit_test.py                # Comprehensive tests (10 tests)
 ├── websocket_server_8080.py    # Primary WebSocket server
 ├── websocket_server_8081.py    # Secondary WebSocket server
