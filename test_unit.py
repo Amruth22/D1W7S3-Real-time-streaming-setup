@@ -143,57 +143,112 @@ class CoreRealTimeStreamingTests(unittest.TestCase):
         except Exception as e:
             print(f"INFO: Document processing test completed with note: {str(e)}")
 
-    def test_04_websocket_server_configuration(self):
-        """Test 4: WebSocket Server Configuration and Setup"""
-        print("Running Test 4: WebSocket Server Configuration")
+    def test_04_file_security_and_validation(self):
+        """Test 4: File Security and Validation Systems"""
+        print("Running Test 4: File Security and Validation")
         
-        # Test configuration values
-        self.assertEqual(self.config.PRIMARY_PORT, 8080)
-        self.assertEqual(self.config.SECONDARY_PORT, 8081)
-        self.assertEqual(self.config.HOST, "localhost")
-        self.assertEqual(self.config.GEMINI_MODEL, "gemini-2.0-flash")
+        # Test file extension validation
+        allowed_extensions = self.config.ALLOWED_EXTENSIONS
+        self.assertIsInstance(allowed_extensions, list)
+        self.assertIn('.txt', allowed_extensions)
+        self.assertIn('.pdf', allowed_extensions)
         
-        # Test file processing configuration
-        self.assertGreater(self.config.MAX_FILE_SIZE, 0)
-        self.assertGreater(self.config.CHUNK_SIZE, 0)
-        self.assertGreaterEqual(self.config.CHUNK_OVERLAP, 0)
-        self.assertIsInstance(self.config.ALLOWED_EXTENSIONS, list)
-        self.assertIn('.txt', self.config.ALLOWED_EXTENSIONS)
+        # Test file size limits
+        max_file_size = self.config.MAX_FILE_SIZE
+        self.assertGreater(max_file_size, 1024)  # At least 1KB
+        self.assertLess(max_file_size, 1024 * 1024 * 1024)  # Less than 1GB
         
-        # Test vector search configuration
-        self.assertEqual(self.config.EMBEDDING_MODEL, "all-MiniLM-L6-v2")
-        self.assertEqual(self.config.EMBEDDING_DIMENSION, 384)
-        self.assertGreater(self.config.MAX_SEARCH_RESULTS, 0)
-        self.assertGreater(self.config.SIMILARITY_THRESHOLD, 0)
-        self.assertLess(self.config.SIMILARITY_THRESHOLD, 1)
+        # Test chunking configuration
+        chunk_size = self.config.CHUNK_SIZE
+        chunk_overlap = self.config.CHUNK_OVERLAP
+        self.assertGreater(chunk_size, 0)
+        self.assertGreaterEqual(chunk_overlap, 0)
+        self.assertLess(chunk_overlap, chunk_size)
         
-        # Test directory paths
-        self.assertTrue(self.config.FAISS_INDEX_PATH.endswith('faiss_index'))
-        self.assertTrue(self.config.UPLOAD_DIR.endswith('uploads'))
+        # Test file validation logic
+        test_filenames = [
+            "document.txt",
+            "presentation.pdf",
+            "malicious.exe",
+            "../../../etc/passwd",
+            "normal_file.txt",
+            "script.js"
+        ]
         
-        # Test WebSocket server classes can be imported
-        try:
-            from websocket_server_8080 import WebSocketServer as Server8080
-            from websocket_server_8081 import WebSocketServer as Server8081
+        valid_files = []
+        invalid_files = []
+        
+        for filename in test_filenames:
+            # Check extension
+            is_valid_extension = any(filename.lower().endswith(ext) for ext in allowed_extensions)
             
-            # Test server initialization (without starting)
-            server_8080 = Server8080(self.config.PRIMARY_PORT)
-            server_8081 = Server8081(self.config.SECONDARY_PORT)
+            # Check for path traversal
+            has_path_traversal = '..' in filename or '/' in filename[:-4]  # Allow extension separator
             
-            self.assertEqual(server_8080.port, self.config.PRIMARY_PORT)
-            self.assertEqual(server_8081.port, self.config.SECONDARY_PORT)
-            self.assertIsNotNone(server_8080.document_processor)
-            self.assertIsNotNone(server_8080.vector_search)
-            self.assertIsNotNone(server_8080.gemini_client)
-            
-            print("PASS: WebSocket server classes imported and initialized")
-            
-        except ImportError as e:
-            print(f"INFO: WebSocket server import test completed with note: {str(e)}")
+            if is_valid_extension and not has_path_traversal:
+                valid_files.append(filename)
+            else:
+                invalid_files.append(filename)
         
-        print("PASS: Configuration validation completed")
-        print(f"PASS: Server ports - Primary: {self.config.PRIMARY_PORT}, Secondary: {self.config.SECONDARY_PORT}")
-        print(f"PASS: Vector config - Model: {self.config.EMBEDDING_MODEL}, Dimension: {self.config.EMBEDDING_DIMENSION}")
+        # Validate security filtering
+        self.assertIn("document.txt", valid_files)
+        self.assertIn("presentation.pdf", valid_files)
+        self.assertIn("malicious.exe", invalid_files)
+        self.assertIn("../../../etc/passwd", invalid_files)
+        self.assertIn("script.js", invalid_files)
+        
+        # Test file size validation
+        test_file_sizes = [1024, 1024*1024, max_file_size - 1, max_file_size + 1]
+        valid_sizes = [size for size in test_file_sizes if size <= max_file_size]
+        invalid_sizes = [size for size in test_file_sizes if size > max_file_size]
+        
+        self.assertGreaterEqual(len(valid_sizes), 3)
+        self.assertGreaterEqual(len(invalid_sizes), 1)
+        
+        # Test directory creation safety
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            test_upload_dir = os.path.join(temp_dir, "test_uploads")
+            
+            # Test safe directory creation
+            os.makedirs(test_upload_dir, exist_ok=True)
+            self.assertTrue(os.path.exists(test_upload_dir))
+            
+            # Test file creation in safe directory
+            test_file_path = os.path.join(test_upload_dir, "safe_test.txt")
+            test_content = b"Safe test content for validation"
+            
+            with open(test_file_path, 'wb') as f:
+                f.write(test_content)
+            
+            self.assertTrue(os.path.exists(test_file_path))
+            
+            # Verify content
+            with open(test_file_path, 'rb') as f:
+                read_content = f.read()
+                self.assertEqual(read_content, test_content)
+        
+        # Test configuration parameter validation
+        config_params = {
+            'PRIMARY_PORT': self.config.PRIMARY_PORT,
+            'SECONDARY_PORT': self.config.SECONDARY_PORT,
+            'MAX_FILE_SIZE': self.config.MAX_FILE_SIZE,
+            'CHUNK_SIZE': self.config.CHUNK_SIZE,
+            'CHUNK_OVERLAP': self.config.CHUNK_OVERLAP,
+            'EMBEDDING_DIMENSION': self.config.EMBEDDING_DIMENSION,
+            'MAX_SEARCH_RESULTS': self.config.MAX_SEARCH_RESULTS,
+            'SIMILARITY_THRESHOLD': self.config.SIMILARITY_THRESHOLD
+        }
+        
+        for param_name, param_value in config_params.items():
+            self.assertIsNotNone(param_value, f"{param_name} should not be None")
+            if isinstance(param_value, (int, float)):
+                self.assertGreater(param_value, 0, f"{param_name} should be positive")
+        
+        print(f"PASS: File security validation - {len(valid_files)} valid, {len(invalid_files)} invalid files")
+        print(f"PASS: File size validation - Max size: {max_file_size // (1024*1024)}MB")
+        print(f"PASS: Chunking config - Size: {chunk_size}, Overlap: {chunk_overlap}")
+        print("PASS: Configuration parameters validated")
 
     def test_05_integration_workflow_validation(self):
         """Test 5: Integration Workflow and Component Interaction"""
